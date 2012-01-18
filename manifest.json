@@ -1,0 +1,11 @@
+{
+  "name": "UCSC Gene Navigator",
+  "description" : "To use, type 'ucsc' plus a gene name into the Omnibox.",
+  "version": "1.0.9",
+  "background_page": "background.html",
+  "permissions": [
+    "http://genome.ucsc.edu/",
+    "tabs"
+  ],
+  "omnibox": { "keyword" : "ucsc" }
+}

@@ -1,0 +1,113 @@
+<script src="jquery-1.7.1.min.js"></script>
+<script>
+      //////////////////////////////////////////////////////////////////////////
+
+      /**
+       * Manages opening urls in tabs.
+       * @constructor
+       */
+      function TabManager() {
+        this.tab_ = null;
+        chrome.tabs.onRemoved.addListener(this.onRemoved_.bind(this));
+      };
+
+      /**
+       * When a tab is removed, see if it was opened by us and null out if yes.
+       * @param {Number} tabid ID of the removed tab.
+       */
+      TabManager.prototype.onRemoved_ = function(tabid) {
+        if (this.tab_ && tabid == this.tab_.id) this.tab_ = null;
+      };
+
+      /**
+       * When a tab opened by us is created, store it for future updates.
+       * @param {Tab} tab The tab which was just opened.
+       */
+      TabManager.prototype.onTab_ = function(tab) {
+        this.tab_ = tab;
+      };
+
+      /**
+       * Opens the supplied URL.
+       *
+       * The first time this method is called a new tab is created.  Subsequent
+       * times this is called, the opened tab will be updated.  If that tab
+       * is ever closed, then a new tab will be created for the next call.
+       *
+       * @param {String} url The URL to open.
+       */
+      TabManager.prototype.open = function(url) {
+        if (url) {
+          var args = { 'url' : url, 'selected' : true };
+          if (this.tab_) {
+            chrome.tabs.update(this.tab_.id, args);
+          } else {
+            chrome.tabs.create(args, this.onTab_.bind(this));
+          }
+        }
+      };
+
+      //////////////////////////////////////////////////////////////////////////
+
+
+// This event is fired each time the user updates the text in the omnibox,
+// as long as the extension's keyword mode is still active.
+function lookupGene(db, gene)
+{
+// returns coordinates for gene (requires an exact match).
+// Warning: this function does a synchronous ajax call.
+    // first look in our local cache.
+    if(suggestCache && suggestCache[gene]) {
+        var list = eval(suggestCache[gene]);
+        if(list.length > 10) {
+            return list.slice(0, 9);
+        } else if(list.length > 0) {
+            return list;
+        }
+    }
+    // synchronously get match from the server
+    var str = $.ajax({
+                     url: "http://genome.ucsc.edu/cgi-bin/hgSuggest",
+                     data: "exact=0&db=" + db + "&prefix=" + gene,
+                     async: false
+                 }).responseText;
+    if(str) {
+        var obj = eval(str);
+        suggestCache[gene] = obj;
+        localStorage["cache"] = suggestCache;
+        if(obj.length > 10) {
+            return obj.slice(0, 9);
+        } else if(obj.length > 0) {
+            return obj;
+        }
+    }
+    return null;
+}
+
+chrome.omnibox.onInputChanged.addListener(
+  function(text, suggest) {
+    console.log('inputChanged: ' + text);
+    var tmp = lookupGene('hg18', text);
+    if (tmp == null) {
+        suggest();
+    } else {
+        tmp2 = new Array(tmp.length)
+        for (var i in tmp) {
+            tmp2[i] = {content: tmp[i].id,
+                       description: tmp[i].value + " (" + tmp[i].id + ")"}
+        }
+        suggest(tmp2);
+    }
+  });
+
+// This event is fired with the user accepts the input in the omnibox.
+chrome.omnibox.onInputEntered.addListener(
+  function(text) {
+    console.log('inputEntered: ' + text);
+    tabManager.open("http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg18&position=" + text)
+  });
+
+var tabManager = new TabManager();
+var suggestCache = localStorage["cache"];
+if (!suggestCache) suggestCache = {};
+</script>
