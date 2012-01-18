@@ -1,0 +1,51 @@
+<html>
+<head><title>My Test Extension Options</title></head>
+<script type="text/javascript">
+
+// Saves options to localStorage.
+function save_options() {
+  var select = document.getElementById("database");
+  var ucscdb = select.children[select.selectedIndex].value;
+  localStorage["db"] = ucscdb;
+
+  // Update status to let user know options were saved.
+  var status = document.getElementById("status");
+  status.innerHTML = "Option Saved.";
+  setTimeout(function() {
+    status.innerHTML = "";
+  }, 750);
+}
+
+// Restores select box state to saved value from localStorage.
+function restore_options() {
+  var ucscdb = localStorage["db"];
+  if (!ucscdb) {
+    return;
+  }
+  var select = document.getElementById("database");
+  for (var i = 0; i < select.children.length; i++) {
+    var child = select.children[i];
+    if (child.value == ucscdb) {
+      child.selected = "true";
+      break;
+    }
+  }
+}
+
+</script>
+
+<body onload="restore_options()">
+
+UCSC Database To Search:
+<select id="database">
+ <option value="hg19">hg19</option>
+ <option value="hg18">hg18</option>
+ <option value="mm9">mm9</option>
+ <option value="mm8">mm8</option>
+</select>
+
+<br>
+<button onclick="save_options()">Save</button>
+<div id="status"></div>
+</body>
+</html>

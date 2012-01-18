@@ -87,7 +87,14 @@ function lookupGene(db, gene)
 chrome.omnibox.onInputChanged.addListener(
   function(text, suggest) {
     console.log('inputChanged: ' + text);
-    var tmp = lookupGene('hg18', text);
+    //Initialise the db choice if not already in localStorage
+    var ucscdb = localStorage["db"];
+    if (!ucscdb) {
+        ucscdb = "hg18";
+        localStorage["db"] = ucscdb;;
+    }
+
+    var tmp = lookupGene(ucscdb, text);
     if (tmp == null) {
         suggest();
     } else {
@@ -104,10 +111,20 @@ chrome.omnibox.onInputChanged.addListener(
 chrome.omnibox.onInputEntered.addListener(
   function(text) {
     console.log('inputEntered: ' + text);
-    tabManager.open("http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg18&position=" + text)
+    //Initialise the db choice if not already in localStorage
+    var ucscdb = localStorage["db"];
+    if (!ucscdb) {
+        ucscdb = "hg18";
+        localStorage["db"] = ucscdb;;
+    }
+
+    tabManager.open("http://genome.ucsc.edu/cgi-bin/hgTracks?db=" + ucscdb + "&position=" + text)
   });
 
 var tabManager = new TabManager();
+
+//Initialise the gene position cache if not already in localStorage
 var suggestCache = localStorage["cache"];
 if (!suggestCache) suggestCache = {}; else suggestCache = JSON.parse(suggestCache);
+
 </script>
