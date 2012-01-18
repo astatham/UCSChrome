@@ -57,6 +57,9 @@ function lookupGene(db, gene)
 // returns coordinates for gene (requires an exact match).
 // Warning: this function does a synchronous ajax call.
     // first look in our local cache.
+    var suggestCache = localStorage[db];
+    if (!suggestCache) suggestCache = {}; else suggestCache = JSON.parse(suggestCache);
+    
     if(suggestCache && suggestCache[gene]) {
         var list = eval(suggestCache[gene]);
         if(list.length > 10) {
@@ -74,7 +77,7 @@ function lookupGene(db, gene)
     if(str) {
         var obj = eval(str);
         suggestCache[gene] = obj;
-        localStorage["cache"] = JSON.stringify(suggestCache);
+        localStorage[db] = JSON.stringify(suggestCache);
         if(obj.length > 10) {
             return obj.slice(0, 9);
         } else if(obj.length > 0) {
@@ -91,7 +94,7 @@ chrome.omnibox.onInputChanged.addListener(
     var ucscdb = localStorage["db"];
     if (!ucscdb) {
         ucscdb = "hg18";
-        localStorage["db"] = ucscdb;;
+        localStorage["db"] = ucscdb;
     }
 
     var tmp = lookupGene(ucscdb, text);
@@ -101,7 +104,7 @@ chrome.omnibox.onInputChanged.addListener(
         tmp2 = new Array(tmp.length)
         for (var i in tmp) {
             tmp2[i] = {content: tmp[i].id,
-                       description: tmp[i].value + " (" + tmp[i].id + ")"}
+                       description: ucscdb + " " + tmp[i].value + " (" + tmp[i].id + ")"}
         }
         suggest(tmp2);
     }
@@ -123,8 +126,5 @@ chrome.omnibox.onInputEntered.addListener(
 
 var tabManager = new TabManager();
 
-//Initialise the gene position cache if not already in localStorage
-var suggestCache = localStorage["cache"];
-if (!suggestCache) suggestCache = {}; else suggestCache = JSON.parse(suggestCache);
 
 </script>
