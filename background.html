@@ -74,7 +74,7 @@ function lookupGene(db, gene)
     if(str) {
         var obj = eval(str);
         suggestCache[gene] = obj;
-        localStorage["cache"] = suggestCache;
+        localStorage["cache"] = JSON.stringify(suggestCache);
         if(obj.length > 10) {
             return obj.slice(0, 9);
         } else if(obj.length > 0) {
@@ -109,5 +109,5 @@ chrome.omnibox.onInputEntered.addListener(
 
 var tabManager = new TabManager();
 var suggestCache = localStorage["cache"];
-if (!suggestCache) suggestCache = {};
+if (!suggestCache) suggestCache = {}; else suggestCache = JSON.parse(suggestCache);
 </script>
